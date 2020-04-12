@@ -8,13 +8,13 @@ import java.net.URL
 class GetJsonData(private  val listener:OnDataAvailable):AsyncTask<String,Void,List<Movie>>() {
 
     interface OnDataAvailable {
-        fun onDataAvailable(data: List<Movie>)
+        fun onDataAvailable(data: List<Film>)
     }
 
-    override fun onPostExecute(result: List<Movie>) {
-        super.onPostExecute(result)
-        listener.onDataAvailable(result)
-    }
+//    override fun onPostExecute(result: List<Movie>) {
+//        super.onPostExecute(result)
+//        listener.onDataAvailable(result)
+//    }
 
     override fun doInBackground(vararg params: String): ArrayList<Movie> {
 

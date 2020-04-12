@@ -5,10 +5,13 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.*
+import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -30,8 +33,22 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
         movie_list.addOnItemTouchListener(RecyclerItemClickListener(this,movie_list,this))
         movie_list.adapter=movieListAdapter
         page=1
-        val downloadData=DownloadData(this)
-        downloadData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
+
+//        val downloadData=DownloadData(this)
+//        downloadData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
+
+        MoviesApi().getMovieList(page,date).enqueue(object :Callback<List<Film>>{
+            override fun onFailure(call: Call<List<Film>>, t: Throwable) {
+                Toast.makeText(applicationContext,"Download Failed",Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResponse(call: Call<List<Film>>, response: Response<List<Film>>) {
+                val films=response.body()
+                if (films != null) {
+                    movieListAdapter.loadNewData(films)
+                }
+            }
+        })
 
         movie_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -47,8 +64,23 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
                         page++
                         isLoading = true
                         progressBar.visibility = View.VISIBLE
-                        val downloadMoreData=DownloadData(this@MainActivity)
-                        downloadMoreData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
+//                        val downloadMoreData=DownloadData(this@MainActivity)
+//                        downloadMoreData.execute("https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
+
+                        MoviesApi().getMovieList(page,date).enqueue(object :Callback<List<Film>>{
+                            override fun onFailure(call: Call<List<Film>>, t: Throwable) {
+                                Toast.makeText(applicationContext,"Download Failed",Toast.LENGTH_SHORT).show()
+                            }
+
+                            override fun onResponse(call: Call<List<Film>>, response: Response<List<Film>>) {
+                                val films=response.body()
+                                if (films != null) {
+                                    movieListAdapter.loadNewData(films)
+                                }
+                            }
+                        })
+
+
                         isLoading = false
                         progressBar.visibility = View.GONE
 
@@ -70,7 +102,7 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
         }
     }
 
-    override fun onDataAvailable(data: List<Movie>) {
+        override fun onDataAvailable(data: List<Film>) {
         movieListAdapter.loadNewData(data)
     }
 
@@ -82,4 +114,6 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
             startActivity(intent)
         }
     }
+
+
 }
