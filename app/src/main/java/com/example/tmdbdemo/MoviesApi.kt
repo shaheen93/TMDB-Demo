@@ -20,11 +20,10 @@ interface MoviesApi {
     companion object {
         operator fun invoke(): MoviesApi {
 
-            val retrofit=Retrofit.Builder().baseUrl(url)
+            return Retrofit.Builder().baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create()).build()
                 .create(MoviesApi::class.java)
-            Log.d("URLUSED",Retrofit.Builder().baseUrl(url).build().toString())
-            return retrofit
+
             }
     }
 
