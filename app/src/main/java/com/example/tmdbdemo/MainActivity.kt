@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -12,8 +13,11 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
@@ -22,9 +26,8 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
     private val movieLayoutManager = LinearLayoutManager(this)
     private var page = 0
     var isLoading = false
+    var date:String=SimpleDateFormat("yyyy-MM-dd").format(Date())
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -33,18 +36,21 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
         movie_list.adapter = movieListAdapter
         page = 1
 
+        Log.d("dateToday",date)
+
 //        val downloadData=DownloadData(this)
 //        downloadData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
 
-        MoviesApi().getMovieList(page).enqueue(object : Callback<List<Film>> {
-            override fun onFailure(call: Call<List<Film>>, t: Throwable) {
-                Toast.makeText(applicationContext, "Download Failed", Toast.LENGTH_SHORT).show()
+        MoviesApi().getMovieList(page,date).enqueue(object : Callback<FilmList> {
+            override fun onFailure(call: Call<FilmList>, t: Throwable) {
+                println(t)
+                Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
             }
 
-            override fun onResponse(call: Call<List<Film>>, response: Response<List<Film>>) {
+            override fun onResponse(call: Call<FilmList>, response: Response<FilmList>) {
                 val films = response.body()
                 if (films != null) {
-                    movieListAdapter.loadNewData(films)
+                    movieListAdapter.loadNewData(films.results)
                 }
             }
         })
@@ -66,8 +72,8 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
 //                        val downloadMoreData=DownloadData(this@MainActivity)
 //                        downloadMoreData.execute("https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
 
-                        MoviesApi().getMovieList(page).enqueue(object : Callback<List<Film>> {
-                            override fun onFailure(call: Call<List<Film>>, t: Throwable) {
+                        MoviesApi().getMovieList(page,date).enqueue(object : Callback<FilmList> {
+                            override fun onFailure(call: Call<FilmList>, t: Throwable) {
                                 Toast.makeText(
                                     applicationContext,
                                     "Download Failed",
@@ -76,12 +82,13 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
                             }
 
                             override fun onResponse(
-                                call: Call<List<Film>>,
-                                response: Response<List<Film>>
+                                call: Call<FilmList>,
+                                response: Response<FilmList>
                             ) {
                                 val films = response.body()
+                                Log.d("Data",films.toString())
                                 if (films != null) {
-                                    movieListAdapter.loadNewData(films)
+                                    movieListAdapter.loadNewData(films.results)
                                 }
                             }
                         })
@@ -116,7 +123,7 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
         val movie = movieListAdapter.getMovie(position)
         if (movie != null) {
             val intent = Intent(this, MovieDetails::class.java)
-            intent.putExtra("Movie", movie)
+            intent.putExtra("Film", movie)
             startActivity(intent)
         }
     }
