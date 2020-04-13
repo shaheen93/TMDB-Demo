@@ -16,12 +16,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 
-class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJsonData.OnDataAvailable,RecyclerItemClickListener.OnRecyclerClickListener {
-    private val movieListAdapter=RecyclerViewAdapter(ArrayList())
-    private val movieLayoutManager=LinearLayoutManager(this)
-    private var page=0
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var date=LocalDate.now().format(DateTimeFormatter.ISO_DATE)
+class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
+    GetJsonData.OnDataAvailable, RecyclerItemClickListener.OnRecyclerClickListener {
+    private val movieListAdapter = RecyclerViewAdapter(ArrayList())
+    private val movieLayoutManager = LinearLayoutManager(this)
+    private var page = 0
     var isLoading = false
 
 
@@ -29,21 +28,21 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        movie_list.layoutManager=movieLayoutManager
-        movie_list.addOnItemTouchListener(RecyclerItemClickListener(this,movie_list,this))
-        movie_list.adapter=movieListAdapter
-        page=1
+        movie_list.layoutManager = movieLayoutManager
+        movie_list.addOnItemTouchListener(RecyclerItemClickListener(this, movie_list, this))
+        movie_list.adapter = movieListAdapter
+        page = 1
 
 //        val downloadData=DownloadData(this)
 //        downloadData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
 
-        MoviesApi().getMovieList(page,date).enqueue(object :Callback<List<Film>>{
+        MoviesApi().getMovieList(page).enqueue(object : Callback<List<Film>> {
             override fun onFailure(call: Call<List<Film>>, t: Throwable) {
-                Toast.makeText(applicationContext,"Download Failed",Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, "Download Failed", Toast.LENGTH_SHORT).show()
             }
 
             override fun onResponse(call: Call<List<Film>>, response: Response<List<Film>>) {
-                val films=response.body()
+                val films = response.body()
                 if (films != null) {
                     movieListAdapter.loadNewData(films)
                 }
@@ -56,7 +55,7 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
 
                 val visibleItemCount = movieLayoutManager.childCount
                 val pastVisibleItem = movieLayoutManager.findFirstCompletelyVisibleItemPosition()
-                val total =movieListAdapter.itemCount
+                val total = movieListAdapter.itemCount
 
                 if (!isLoading) {
 
@@ -67,13 +66,20 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
 //                        val downloadMoreData=DownloadData(this@MainActivity)
 //                        downloadMoreData.execute("https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
 
-                        MoviesApi().getMovieList(page,date).enqueue(object :Callback<List<Film>>{
+                        MoviesApi().getMovieList(page).enqueue(object : Callback<List<Film>> {
                             override fun onFailure(call: Call<List<Film>>, t: Throwable) {
-                                Toast.makeText(applicationContext,"Download Failed",Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Download Failed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
 
-                            override fun onResponse(call: Call<List<Film>>, response: Response<List<Film>>) {
-                                val films=response.body()
+                            override fun onResponse(
+                                call: Call<List<Film>>,
+                                response: Response<List<Film>>
+                            ) {
+                                val films = response.body()
                                 if (films != null) {
                                     movieListAdapter.loadNewData(films)
                                 }
@@ -96,21 +102,21 @@ class MainActivity : AppCompatActivity(),DownloadData.OnDownloadComplete,GetJson
     }
 
     override fun onDownloadComplete(data: String, status: DownloadStatus) {
-        if(status==DownloadStatus.SUCCESS){
-            val jsonData=GetJsonData(this)
+        if (status == DownloadStatus.SUCCESS) {
+            val jsonData = GetJsonData(this)
             jsonData.execute(data)
         }
     }
 
-        override fun onDataAvailable(data: List<Film>) {
+    override fun onDataAvailable(data: List<Film>) {
         movieListAdapter.loadNewData(data)
     }
 
     override fun onItemClick(view: View, position: Int) {
-        val movie=movieListAdapter.getMovie(position)
-        if(movie!=null){
-            val intent=Intent(this,MovieDetails::class.java)
-            intent.putExtra("Movie",movie)
+        val movie = movieListAdapter.getMovie(position)
+        if (movie != null) {
+            val intent = Intent(this, MovieDetails::class.java)
+            intent.putExtra("Movie", movie)
             startActivity(intent)
         }
     }
