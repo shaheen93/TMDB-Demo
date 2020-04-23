@@ -1,11 +1,11 @@
-package com.example.tmdbdemo
+package com.example.tmdbdemo.DeprecatedMethod
 
 import android.os.AsyncTask
 import android.util.Log
+import com.example.tmdbdemo.Film
 import org.json.JSONObject
-import java.net.URL
 
-class GetJsonData(private  val listener:OnDataAvailable):AsyncTask<String,Void,List<Movie>>() {
+class GetJsonData(private  val listener: OnDataAvailable):AsyncTask<String,Void,List<Movie>>() {
 
     interface OnDataAvailable {
         fun onDataAvailable(data: List<Film>)
@@ -30,7 +30,12 @@ class GetJsonData(private  val listener:OnDataAvailable):AsyncTask<String,Void,L
                 val overview= jsonMovie.getString("overview")
                 val releaseDate= jsonMovie.getString("release_date")
                 val imgUrl= jsonMovie.getString("poster_path")
-                val movie=Movie(title,overview,releaseDate,imgUrl)
+                val movie= Movie(
+                    title,
+                    overview,
+                    releaseDate,
+                    imgUrl
+                )
                 movieList.add(movie)
             }
         }catch (e: Exception){

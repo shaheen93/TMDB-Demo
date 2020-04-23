@@ -1,4 +1,4 @@
-package com.example.tmdbdemo
+package com.example.tmdbdemo.DeprecatedMethod
 
 import java.io.Serializable
 

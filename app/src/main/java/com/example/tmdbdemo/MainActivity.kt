@@ -1,32 +1,30 @@
 package com.example.tmdbdemo
 
 import android.content.Intent
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.*
-import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
-    GetJsonData.OnDataAvailable, RecyclerItemClickListener.OnRecyclerClickListener {
+class MainActivity : AppCompatActivity(), RecyclerItemClickListener.OnRecyclerClickListener {
     private val movieListAdapter = RecyclerViewAdapter(ArrayList())
     private val movieLayoutManager = LinearLayoutManager(this)
-    private var page = 0
     var isLoading = false
-    var date:String=SimpleDateFormat("yyyy-MM-dd").format(Date())
+    private var page = 0
+    var date: String = SimpleDateFormat("yyyy-MM-dd").format(Date())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,24 +34,14 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
         movie_list.adapter = movieListAdapter
         page = 1
 
-        Log.d("dateToday",date)
+        Log.d("dateToday", date)
 
-//        val downloadData=DownloadData(this)
-//        downloadData.execute(" https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
+        val viewModel= ViewModelProviders.of(this).get(MainViewModel::class.java)
+        viewModel.movies.observe(this,Observer<List<Film>>{movies->movieListAdapter.loadNewData(movies)})
 
-        MoviesApi().getMovieList(page,date).enqueue(object : Callback<FilmList> {
-            override fun onFailure(call: Call<FilmList>, t: Throwable) {
-                println(t)
-                Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
-            }
+        viewModel.getMovies(page,date)
 
-            override fun onResponse(call: Call<FilmList>, response: Response<FilmList>) {
-                val films = response.body()
-                if (films != null) {
-                    movieListAdapter.loadNewData(films.results)
-                }
-            }
-        })
+//        getItems()
 
         movie_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -69,31 +57,9 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
                         page++
                         isLoading = true
                         progressBar.visibility = View.VISIBLE
-//                        val downloadMoreData=DownloadData(this@MainActivity)
-//                        downloadMoreData.execute("https://api.themoviedb.org/3/discover/movie?api_key=6ceffecc92ef62d38f4d80eb3d3883d3&language=en&sort_by=primary_release_date.desc&page=$page&primary_release_date.lte=$date")
 
-                        MoviesApi().getMovieList(page,date).enqueue(object : Callback<FilmList> {
-                            override fun onFailure(call: Call<FilmList>, t: Throwable) {
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Download Failed",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-
-                            override fun onResponse(
-                                call: Call<FilmList>,
-                                response: Response<FilmList>
-                            ) {
-                                val films = response.body()
-                                Log.d("Data",films.toString())
-                                if (films != null) {
-                                    movieListAdapter.loadNewData(films.results)
-                                }
-                            }
-                        })
-
-
+                        viewModel.getMovies(page,date)
+//                        getItems()
                         isLoading = false
                         progressBar.visibility = View.GONE
 
@@ -108,16 +74,6 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
 
     }
 
-    override fun onDownloadComplete(data: String, status: DownloadStatus) {
-        if (status == DownloadStatus.SUCCESS) {
-            val jsonData = GetJsonData(this)
-            jsonData.execute(data)
-        }
-    }
-
-    override fun onDataAvailable(data: List<Film>) {
-        movieListAdapter.loadNewData(data)
-    }
 
     override fun onItemClick(view: View, position: Int) {
         val movie = movieListAdapter.getMovie(position)
@@ -128,5 +84,20 @@ class MainActivity : AppCompatActivity(), DownloadData.OnDownloadComplete,
         }
     }
 
+    fun getItems(){
+        MoviesApi().getMovieList(page, date).enqueue(object : Callback<FilmList> {
+            override fun onFailure(call: Call<FilmList>, t: Throwable) {
+                println(t)
+                Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<FilmList>, response: Response<FilmList>) {
+                val films = response.body()
+                if (films != null) {
+                    movieListAdapter.loadNewData(films.results)
+                }
+            }
+        })
+    }
 
 }

@@ -1,16 +1,15 @@
-package com.example.tmdbdemo
+package com.example.tmdbdemo.DeprecatedMethod
 
 import java.net.URL
 import android.os.AsyncTask
 import android.util.Log
-import android.view.View
 
 enum class DownloadStatus{
     SUCCESS,FAIL,IDLE
 }
-class DownloadData(private val listener:OnDownloadComplete) : AsyncTask<String,Void,String>() {
+class DownloadData(private val listener: OnDownloadComplete) : AsyncTask<String,Void,String>() {
 
-    private var status=DownloadStatus.IDLE
+    private var status= DownloadStatus.IDLE
 
     interface OnDownloadComplete {
         fun onDownloadComplete(data: String,status: DownloadStatus)
@@ -25,14 +24,14 @@ class DownloadData(private val listener:OnDownloadComplete) : AsyncTask<String,V
     override fun doInBackground(vararg params: String?): String {
 
         if(params[0]==null){
-            status=DownloadStatus.FAIL
+            status= DownloadStatus.FAIL
             return "No URL provided"
         }
         try{
-            status=DownloadStatus.SUCCESS
+            status= DownloadStatus.SUCCESS
             return URL(params[0]).readText()
         }catch(e: Exception){
-            status=DownloadStatus.FAIL
+            status= DownloadStatus.FAIL
             Log.d("Download Error",e.message)
             return "Invalid URL ${e.message}"
         }
